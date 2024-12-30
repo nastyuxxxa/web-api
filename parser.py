@@ -2,18 +2,15 @@ import requests
 from bs4 import BeautifulSoup
 
 
-def get_page(base_url, pages=1  ): #указать сколько страниц надо распарсить в параметре pages
+def get_page(base_url="https://www.maxidom.ru/catalog/kran-buksy/", pages=1):  #указать сколько страниц надо распарсить в параметре pages
     for page_num in range(1, pages + 1):
-        current_url = f'{base_url}' #если нужно распарсить несколько страниц, указать дополнительные параметры.
-                                    # Например, f'{base_url}?PAGEN_2={page_num}'
+        current_url = f'{base_url}'
 
-        page_data = process_page(current_url)
-
-        display_products(page_num, page_data)
+        for item in process_page(current_url):
+            yield item
 
 
 def process_page(current_url):
-    products_data = []
 
     response = requests.get(current_url)
     soup = BeautifulSoup(response.content, "lxml")
@@ -26,20 +23,10 @@ def process_page(current_url):
         title = products_names[i].find('span', itemprop="name").text
         price = "".join(filter(str.isdigit, products_prices[i].text))
 
-        products_data.append({
+        yield {
             "title": title,
             "price": price
-        })
-
-    return products_data
-
-
-def display_products(page_num, products):
-    print(f"\nСобраны данные со страницы {page_num}")
-    print(f"{'№':<5}{'Название':<80}{'Цена':>10}")
-    print("-" * 95)
-    for i, product in enumerate(products, 1):
-        print(f"{i:<5}{product['title']:<90}{product['price']:>10}")
+        }
 
 
 url = "https://www.maxidom.ru/catalog/kran-buksy/"
